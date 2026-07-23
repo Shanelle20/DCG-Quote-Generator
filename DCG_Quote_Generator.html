@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DCG Group — Quote Generator</title>
+<script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+<style>
+  :root{
+    --navy:#0E0C36;
+    --shadowberry:#401842;
+    --orange:#FF5F00;
+    --golden:#FFAA19;
+    --bg:#eef1f5;
+    --card:#ffffff;
+    --panel:#FFF0E7;
+    --line:#E3E8F0;
+    --text:#2B3648;
+    --muted:#6B7688;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; padding:24px 16px;
+    background-color:var(--bg);
+    font-family:'Segoe UI', Helvetica, Arial, sans-serif;
+    color:var(--text);
+  }
+  .wrap{
+    max-width:1180px; margin:0 auto;
+    display:grid; grid-template-columns:360px 1fr; gap:24px;
+  }
+  @media (max-width: 860px){
+    .wrap{ grid-template-columns:1fr; }
+  }
+  .panel{
+    background-color:var(--card);
+    border-radius:14px; border:1px solid var(--line);
+    padding:24px;
+  }
+  .panel h1{
+    margin:0 0 4px 0; font-size:18px; color:var(--navy);
+  }
+  .panel .sub{
+    margin:0 0 20px 0; font-size:12.5px; color:var(--muted);
+  }
+  .field{
+    margin-bottom:14px;
+  }
+  .field label{
+    display:block; font-size:12.5px; color:var(--muted); margin-bottom:5px; font-weight:600;
+  }
+  .field input, .field textarea, .field select{
+    width:100%; font-size:14px; color:var(--text);
+    padding:9px 11px; border:1px solid var(--line); border-radius:8px;
+    background-color:#FAFBFD;
+    font-family:inherit;
+  }
+  .field textarea{
+    resize:vertical;
+  }
+  .field input:focus, .field textarea:focus, .field select:focus{
+    outline:none; border-color:var(--orange); background-color:#ffffff;
+  }
+  .tpl-group{
+    display:flex; gap:6px; margin-bottom:18px;
+  }
+  .tpl-option{
+    flex:1;
+  }
+  .tpl-option input{
+    position:absolute; opacity:0; width:0; height:0;
+  }
+  .tpl-option label{
+    display:block; text-align:center; font-size:13px; font-weight:600;
+    padding:9px 6px; border-radius:8px; border:1.5px solid var(--line);
+    cursor:pointer; color:var(--muted); background-color:#FAFBFD;
+    transition:all 0.15s ease;
+  }
+  .tpl-option input:checked + label{
+    border-color:var(--tpl-accent, var(--orange));
+    color:var(--tpl-accent, var(--orange));
+    background-color:#ffffff;
+  }
+  .row2{
+    display:grid; grid-template-columns:1fr 1fr; gap:10px;
+  }
+  .badge{
+    display:inline-block; font-size:10.5px; font-weight:700; letter-spacing:0.5px;
+    color:var(--orange); text-transform:uppercase; border:1px solid var(--orange);
+    border-radius:20px; padding:3px 10px; margin-bottom:16px;
+  }
+  button{
+    width:100%; font-size:14px; font-weight:700; border:none; border-radius:8px;
+    padding:13px 20px; cursor:pointer; font-family:inherit; margin-top:6px;
+  }
+  #copyBtn{
+    background-color:var(--orange); color:#ffffff;
+  }
+  #copyBtn:hover{ opacity:0.92; }
+  #downloadBtn{
+    background-color:var(--panel); color:var(--navy); border:1px solid var(--orange);
+  }
+  #downloadBtn:hover{ background-color:#FFE5D6; }
+  #insertBtn{
+    background-color:var(--navy); color:#ffffff; display:none;
+  }
+  #insertBtn:hover{ opacity:0.92; }
+  #hubspotBtn{
+    background-color:#FFAA19; color:var(--navy);
+  }
+  #hubspotBtn:hover{ opacity:0.92; }
+  .status{
+    margin-top:10px; font-size:12.5px; color:var(--muted); text-align:center; min-height:16px;
+  }
+  .preview-panel{
+    padding:0; overflow:hidden; display:flex; flex-direction:column;
+  }
+  .preview-header{
+    padding:14px 20px; border-bottom:1px solid var(--line);
+    font-size:12.5px; color:var(--muted); font-weight:600;
+  }
+  iframe{
+    width:100%; height:1700px; border:none; background-color:var(--bg);
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <div class="panel">
+    <span class="badge">Quote generator</span>
+    <h1>Generate a pricing quote</h1>
+    <p class="sub">Pick a template, fill in the details — the email on the right updates live. Copy or download the finished HTML when you're ready to send.</p>
+
+    <div class="field">
+      <label>Template</label>
+      <div class="tpl-group">
+        <div class="tpl-option">
+          <input type="radio" name="tpl" id="tpl-foxit" value="foxit" checked onchange="onTemplateChange()">
+          <label for="tpl-foxit">Foxit</label>
+        </div>
+        <div class="tpl-option">
+          <input type="radio" name="tpl" id="tpl-anydesk" value="anydesk" onchange="onTemplateChange()">
+          <label for="tpl-anydesk">AnyDesk</label>
+        </div>
+        <div class="tpl-option">
+          <input type="radio" name="tpl" id="tpl-teamviewer" value="teamviewer" onchange="onTemplateChange()">
+          <label for="tpl-teamviewer">TeamViewer</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="industrySelect">Customer industry (optional)</label>
+      <select id="industrySelect" onchange="onIndustryChange()">
+        <option value="">— None —</option>
+        <option value="construction">Construction</option>
+        <option value="legal">Legal</option>
+        <option value="healthcare">Healthcare</option>
+        <option value="finance">Finance</option>
+        <option value="manufacturing">Manufacturing</option>
+        <option value="retail">Retail</option>
+        <option value="education">Education</option>
+        <option value="government">Government</option>
+        <option value="it">IT / Technology</option>
+        <option value="custom">Other (type your own)</option>
+      </select>
+    </div>
+
+    <div class="field" id="customIndustryField" style="display:none;">
+      <label for="customIndustryName">Type the industry name</label>
+      <input type="text" id="customIndustryName" placeholder="e.g. Hospitality" oninput="render()">
+    </div>
+
+    <div class="field">
+      <label for="customerCompany">Customer / company name (optional)</label>
+      <input type="text" id="customerCompany" placeholder="e.g. Acme Construction" oninput="render()">
+    </div>
+
+    <div class="field">
+      <label for="customIndustryNote">Custom personalization note (optional — overrides the industry preset above)</label>
+      <textarea id="customIndustryNote" rows="3" placeholder="Type a specific line about this customer's situation and it'll be used instead of the preset" oninput="render()"></textarea>
+    </div>
+
+    <div class="field">
+      <label for="contactName">Contact name</label>
+      <input type="text" id="contactName" value="John" oninput="render()">
+    </div>
+
+    <div class="field" id="licenseNameTextField">
+      <label for="licenseNameText">License name</label>
+      <input type="text" id="licenseNameText" value="Foxit PDF Editor+ — Business" oninput="render()">
+    </div>
+
+    <div class="field" id="licenseNameSelectField" style="display:none;">
+      <label for="licenseNameSelect">License name (tier)</label>
+      <select id="licenseNameSelect" onchange="render()"></select>
+    </div>
+
+    <div class="field">
+      <label for="unitPrice">Unit price (ex VAT)</label>
+      <input type="text" id="unitPrice" value="124.00" oninput="onPricingChange()">
+    </div>
+
+    <div class="row2">
+      <div class="field">
+        <label for="qty">Qty (user licenses)</label>
+        <input type="text" id="qty" value="10" oninput="onPricingChange()">
+      </div>
+      <div class="field">
+        <label for="totalPrice">Total price (auto)</label>
+        <input type="text" id="totalPrice" value="1,240.00" readonly style="background-color:#F0F2F5; color:var(--muted); cursor:not-allowed;">
+      </div>
+    </div>
+
+    <div class="field" id="addonToggleField" style="display:none;">
+      <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:600;">
+        <input type="checkbox" id="addonEnabled" onchange="onAddonToggle()" style="width:auto;">
+        Add-on: AnyDesk Addon Channel
+      </label>
+    </div>
+
+    <div id="addonFields" style="display:none;">
+      <div class="field">
+        <label for="addonUnitPrice">Add-on unit price (ex VAT)</label>
+        <input type="text" id="addonUnitPrice" value="0.00" oninput="onAddonPricingChange()">
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label for="addonQty">Add-on qty</label>
+          <input type="text" id="addonQty" value="1" oninput="onAddonPricingChange()">
+        </div>
+        <div class="field">
+          <label for="addonTotalPrice">Add-on total (auto)</label>
+          <input type="text" id="addonTotalPrice" value="0.00" readonly style="background-color:#F0F2F5; color:var(--muted); cursor:not-allowed;">
+        </div>
+      </div>
+    </div>
+
+    <div class="field" id="tvAddonToggleField" style="display:none;">
+      <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:600;">
+        <input type="checkbox" id="tvAddonEnabled" onchange="onTvAddonToggle()" style="width:auto;">
+        Add-on: TeamViewer Addon Channel
+      </label>
+    </div>
+
+    <div id="tvAddonFields" style="display:none;">
+      <div class="field">
+        <label for="tvAddonUnitPrice">Add-on unit price (ex VAT)</label>
+        <input type="text" id="tvAddonUnitPrice" value="0.00" oninput="onTvAddonPricingChange()">
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label for="tvAddonQty">Add-on qty</label>
+          <input type="text" id="tvAddonQty" value="1" oninput="onTvAddonPricingChange()">
+        </div>
+        <div class="field">
+          <label for="tvAddonTotalPrice">Add-on total (auto)</label>
+          <input type="text" id="tvAddonTotalPrice" value="0.00" readonly style="background-color:#F0F2F5; color:var(--muted); cursor:not-allowed;">
+        </div>
+      </div>
+    </div>
+
+    <button id="copyBtn" type="button" onclick="copyHtml()">Copy email HTML</button>
+    <button id="downloadBtn" type="button" onclick="downloadHtml()">Download .html file</button>
+    <button id="insertBtn" type="button" onclick="insertIntoReply()">Insert into reply</button>
+    <button id="hubspotBtn" type="button" onclick="logToHubSpot()">Log to HubSpot</button>
+    <p class="status" id="status"></p>
+  </div>
+
+  <div class="panel preview-panel">
+    <div class="preview-header">Live preview</div>
+    <iframe id="previewFrame"></iframe>
+  </div>
+
+</div>
+
+<script>
+const TEMPLATES = {
+  foxit: {
+    productName: 'Foxit',
+    badgeName: 'Foxit',
+    dark: '#0E0C36',
+    secondary: '#401842',
+    accent: '#FF5F00',
+    panel: '#FFF0E7',
+    panelAlt: '#FFF6E5',
+    panelText: '#805000',
+    mutedAccent: '#B37100',
+    footerTagline: 'FOXIT — DO MORE WITH DOCUMENTS',
+    introText: "It was great speaking with you about Foxit PDF Editor+ — thank you for taking the time. I've pulled your pricing together below, along with the full license overview attached for your records.",
+    reasonsHeading: 'Why teams choose Foxit over Adobe Acrobat:',
+    bullet1: '<strong>A fraction of the cost</strong> of Adobe Acrobat, without cutting back on core editing, conversion and OCR tools',
+    bullet2: '<strong>A lighter, faster application</strong> — Foxit is built to open and run quicker than Acrobat, even on modest hardware',
+    bullet3: '<strong>eSign, mobile editing and smart redaction bundled in</strong>, where Adobe typically prices these as separate add-ons',
+    licenseNameDefault: 'Foxit PDF Editor+ — Business',
+    showPaymentTerm: true
+  },
+  anydesk: {
+    productName: 'AnyDesk',
+    badgeName: 'AnyDesk',
+    dark: '#1A1A1A',
+    secondary: '#7A1610',
+    accent: '#EF443B',
+    panel: '#FDEDEC',
+    panelAlt: '#FFF1F0',
+    panelText: '#8C1B15',
+    mutedAccent: '#B23A2E',
+    footerTagline: 'ANYDESK — THE REMOTE DESKTOP APPLICATION',
+    introText: "It was great speaking with you about AnyDesk — thank you for taking the time. I've pulled your pricing together below, along with the full license overview attached for your records.",
+    reasonsHeading: 'Why choose AnyDesk:',
+    bullet1: "<strong>Noticeably lower latency</strong>, thanks to AnyDesk's proprietary DeskRT codec, even on limited or unstable bandwidth",
+    bullet2: '<strong>Simple, flat-rate licensing</strong> — no confusing tiers or features locked behind higher plans',
+    bullet3: '<strong>A lightweight client</strong> that installs and connects in seconds, using minimal system resources',
+    licenseNameDefault: 'AnyDesk — Enterprise License',
+    showPaymentTerm: false
+  },
+  teamviewer: {
+    productName: 'TeamViewer',
+    badgeName: 'TeamViewer',
+    dark: '#050A52',
+    secondary: '#0B4A8C',
+    accent: '#0E8EE9',
+    panel: '#EAF2FE',
+    panelAlt: '#EEF5FF',
+    panelText: '#0B4A8C',
+    mutedAccent: '#0970D2',
+    footerTagline: 'TEAMVIEWER — THE REMOTE CONNECTIVITY PLATFORM',
+    introText: "It was great speaking with you about TeamViewer — thank you for taking the time. I've pulled your pricing together below, along with the full license overview attached for your records.",
+    reasonsHeading: 'Why choose TeamViewer:',
+    bullet1: '<strong>Broader device reach</strong> — remote access across desktop, mobile, IoT and industrial equipment, not just standard PCs',
+    bullet2: '<strong>Built-in augmented reality support tools</strong> for guided assistance, which GoTo\'s core plans don\'t include',
+    bullet3: '<strong>Proven at global scale</strong>, with over 2.5 billion installs behind its infrastructure and reliability',
+    licenseNameDefault: 'TeamViewer — Business Subscription',
+    showPaymentTerm: false
+  }
+};
+
+const INDUSTRIES = {
+  construction: {
+    label: 'Construction',
+    intro: (company) => `I know teams${company ? ` at ${company}` : ''} managing multiple sites, subcontractors and crews need tools that are simple to roll out and stay reliable even with patchy on-site connectivity — that's exactly where this fits in.`,
+    callout: (product, company) => `With crews spread across sites and subcontractors coming and going, ${product} keeps approvals, remote support and reporting simple for ${company || 'construction teams'} — no matter where the job is.`
+  },
+  legal: {
+    label: 'Legal',
+    intro: (company) => `I know firms${company ? ` like ${company}` : ''} handle sensitive client documents daily, so security, audit trails and ease of use matter just as much as price.`,
+    callout: (product, company) => `${product} is built to keep document handling secure and simple for ${company || 'legal teams'} — without slowing down billable work.`
+  },
+  healthcare: {
+    label: 'Healthcare',
+    intro: (company) => `I know teams${company ? ` at ${company}` : ''} are balancing patient care with strict compliance requirements, so anything that adds friction is a non-starter.`,
+    callout: (product, company) => `${product} is built to stay reliable and compliance-friendly for ${company || 'healthcare teams'}, without adding extra admin burden.`
+  },
+  finance: {
+    label: 'Finance',
+    intro: (company) => `I know teams${company ? ` at ${company}` : ''} deal with sensitive financial data daily, so security and reliability matter as much as cost.`,
+    callout: (product, company) => `${product} gives ${company || 'finance teams'} the security and consistency needed for day-to-day financial operations, at a predictable cost.`
+  },
+  manufacturing: {
+    label: 'Manufacturing',
+    intro: (company) => `I know teams${company ? ` at ${company}` : ''} run across plant floors and back-office systems, so tools need to be dependable across very different environments.`,
+    callout: (product, company) => `${product} keeps support and connectivity consistent for ${company || 'manufacturing teams'}, from the plant floor to the back office.`
+  },
+  retail: {
+    label: 'Retail',
+    intro: (company) => `I know teams${company ? ` at ${company}` : ''} are managing multiple stores or locations, so ease of rollout and support across sites matters a lot.`,
+    callout: (product, company) => `${product} makes it easy for ${company || 'retail teams'} to support and manage systems across multiple locations from one place.`
+  },
+  education: {
+    label: 'Education',
+    intro: (company) => `I know teams${company ? ` at ${company}` : ''} are working with tight budgets and a wide mix of devices and users, so simplicity and value both matter.`,
+    callout: (product, company) => `${product} gives ${company || 'education teams'} an easy, budget-friendly way to support a wide range of devices and users.`
+  },
+  government: {
+    label: 'Government',
+    intro: (company) => `I know teams${company ? ` at ${company}` : ''} operate under strict procurement and compliance requirements, so a clear, reliable process matters.`,
+    callout: (product, company) => `${product} is a straightforward fit for ${company || 'government teams'} looking for a reliable, well-supported solution.`
+  },
+  it: {
+    label: 'IT / Technology',
+    intro: (company) => `I know teams${company ? ` at ${company}` : ''} are supporting a wide range of systems and users, so reliability and ease of management are key.`,
+    callout: (product, company) => `${product} slots straight into ${company || 'IT teams'}' existing workflows, without adding extra overhead to manage.`
+  }
+};
+
+function onIndustryChange(){
+  const key = document.getElementById('industrySelect').value;
+  document.getElementById('customIndustryField').style.display = (key === 'custom') ? 'block' : 'none';
+  render();
+}
+
+function getPersonalization(tpl){
+  const industryKey = document.getElementById('industrySelect').value;
+  const company = esc(document.getElementById('customerCompany').value.trim());
+  const customNote = document.getElementById('customIndustryNote').value.trim();
+
+  if(customNote){
+    return {
+      enabled: true,
+      heading: 'Why this matters for ' + (company || 'you'),
+      intro: esc(customNote),
+      callout: esc(customNote)
+    };
+  }
+
+  if(industryKey === 'custom'){
+    const industryName = document.getElementById('customIndustryName').value.trim();
+    if(!industryName) return { enabled: false };
+    const industryEsc = esc(industryName);
+    return {
+      enabled: true,
+      heading: 'Why this matters for ' + (company || industryEsc + ' teams'),
+      intro: `I know teams in ${industryEsc}${company ? ` like ${company}` : ''} have their own priorities, so I've kept this quote focused on what's actually useful for you.`,
+      callout: `${tpl.productName} is a flexible fit for ${company || industryEsc + ' teams'}, whatever your priorities look like day to day.`
+    };
+  }
+
+  if(industryKey && INDUSTRIES[industryKey]){
+    const ind = INDUSTRIES[industryKey];
+    return {
+      enabled: true,
+      heading: 'Why this matters for ' + (company || ind.label + ' teams'),
+      intro: ind.intro(company),
+      callout: ind.callout(tpl.productName, company)
+    };
+  }
+
+  return { enabled: false };
+}
+
+function buildTemplate(tpl, data, pers){
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DCG Group — Pricing Confirmation</title>
+</head>
+<body style="margin:0; padding:0; background-color:#eef1f5; font-family:'Segoe UI', Helvetica, Arial, sans-serif;">
+
+<div style="display:none; max-height:0; overflow:hidden; opacity:0;">
+Your pricing is ready — plus a few quick next steps to get your order moving.
+</div>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#eef1f5; padding:32px 0;">
+<tr>
+<td align="left" style="padding-left:32px;">
+
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff; border-radius:14px; overflow:hidden; border:1px solid #E3E8F0;">
+
+  <tr>
+    <td height="6" style="background-color:${tpl.accent}; background-image:linear-gradient(90deg, ${tpl.accent} 0%, ${tpl.secondary} 100%); font-size:0; line-height:0;">&nbsp;</td>
+  </tr>
+
+  <tr>
+    <td style="background-color:#ffffff; padding:24px 40px 20px 40px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td>
+            <img src="data:image/png;base64,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" width="310" height="62" alt="DCG Group" style="display:block; border:0; outline:none; text-decoration:none;">
+          </td>
+          <td align="right" style="font-size:11px; color:#8A93A6; text-transform:uppercase; letter-spacing:1.5px;">
+            Pricing&nbsp;Confirmation
+            <br>
+            <span style="display:inline-block; margin-top:6px; font-size:10px; font-weight:700; letter-spacing:1px; color:${tpl.accent}; text-transform:uppercase; border:1px solid ${tpl.accent}; border-radius:20px; padding:3px 10px;">
+              Authorised ${tpl.badgeName} Distributor — Africa
+            </span>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <tr>
+    <td style="background-color:${tpl.dark}; background-image:linear-gradient(135deg, ${tpl.secondary} 0%, ${tpl.dark} 65%); padding:28px 40px 32px 40px;">
+      <p style="margin:0; font-size:22px; line-height:1.35; color:#ffffff; font-weight:600;">
+        Here's the pricing you asked for, ${data.contactName} 👋
+      </p>
+    </td>
+  </tr>
+
+  <tr>
+    <td style="padding:32px 40px 8px 40px;">
+      <p style="margin:0 0 4px 0; font-size:15px; line-height:1.6; color:#2B3648;">
+        Hi ${data.contactName},
+      </p>
+      <p style="margin:0 0 12px 0; font-size:15px; line-height:1.6; color:#2B3648;">
+        Hope you're doing well,
+      </p>
+      <p style="margin:0 0 16px 0; font-size:15px; line-height:1.6; color:#2B3648;">
+        Thank you for reaching out. As requested, I have put together your pricing, along with the full license overview for your reference.
+      </p>
+      ${pers.enabled ? `<p style="margin:0 0 16px 0; font-size:15px; line-height:1.6; color:#2B3648;">
+        ${pers.intro}
+      </p>` : ''}
+      <p style="margin:0 0 6px 0; font-size:13.5px; font-weight:700; color:${tpl.secondary};">
+        ${tpl.reasonsHeading}
+      </p>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td style="padding:6px 0; font-size:14px; color:#2B3648; line-height:1.5;">
+            <span style="color:${tpl.accent}; font-weight:700;">✓</span>&nbsp;&nbsp;${tpl.bullet1}
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:6px 0; font-size:14px; color:#2B3648; line-height:1.5;">
+            <span style="color:${tpl.accent}; font-weight:700;">✓</span>&nbsp;&nbsp;${tpl.bullet2}
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:6px 0 4px 0; font-size:14px; color:#2B3648; line-height:1.5;">
+            <span style="color:${tpl.accent}; font-weight:700;">✓</span>&nbsp;&nbsp;${tpl.bullet3}
+          </td>
+        </tr>
+      </table>
+      ${pers.enabled ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:14px; background-color:${tpl.panelAlt}; border-radius:10px;">
+        <tr>
+          <td style="padding:12px 16px;">
+            <p style="margin:0 0 4px 0; font-size:12px; font-weight:700; color:${tpl.secondary}; text-transform:uppercase; letter-spacing:0.5px;">${pers.heading}</p>
+            <p style="margin:0; font-size:13px; line-height:1.5; color:${tpl.panelText};">${pers.callout}</p>
+          </td>
+        </tr>
+      </table>` : ''}
+      <p style="margin:16px 0 0 0; font-size:15px; line-height:1.6; color:#2B3648;">
+        Take a look below, and please don't hesitate to reach out if anything needs adjusting.
+      </p>
+    </td>
+  </tr>
+
+  <tr>
+    <td style="padding:16px 40px 4px 40px;" align="center">
+      <table role="presentation" width="340" cellpadding="0" cellspacing="0" style="background-color:#ffffff; border:2px solid ${tpl.accent}; border-radius:16px; overflow:hidden;">
+
+        <tr>
+          <td style="background-color:${tpl.dark}; background-image:linear-gradient(90deg, ${tpl.accent} 0%, ${tpl.secondary} 100%); padding:9px 22px;">
+            <p style="margin:0; font-size:13px; font-weight:800; letter-spacing:1px; color:#ffffff; text-transform:uppercase; text-align:center;">
+              ${data.licenseName}
+            </p>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:16px 28px 2px 28px; text-align:center;">
+            <p style="margin:0; font-size:32px; font-weight:800; color:${tpl.dark}; line-height:1;">R${data.totalPrice}</p>
+            <p style="margin:5px 0 0 0; font-size:11px; font-weight:700; color:#8A93A6; text-transform:uppercase; letter-spacing:1px;">Year 1 &nbsp;·&nbsp; ex VAT</p>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:10px 28px 2px 28px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #E7EBF2;">
+              <tr><td style="padding:8px 0 4px 0; font-size:13px; color:#2B3648;">
+                <span style="color:${tpl.accent}; font-weight:700;">✓</span>&nbsp;&nbsp;${data.qty} Per User Per License
+              </td></tr>
+              <tr><td style="padding:4px 0; font-size:13px; color:#2B3648;">
+                <span style="color:${tpl.accent}; font-weight:700;">✓</span>&nbsp;&nbsp;R${data.unitPrice} Per User (Unit Price)
+              </td></tr>
+              ${data.addonActive ? `<tr><td style="padding:4px 0; font-size:13px; color:#2B3648;">
+                <span style="color:${tpl.accent}; font-weight:700;">✓</span>&nbsp;&nbsp;AnyDesk Addon Channels: Unit Price - R${data.addonUnitPrice}
+              </td></tr>
+              <tr><td style="padding:4px 0; font-size:13px; color:#2B3648;">
+                <span style="color:${tpl.accent}; font-weight:700;">✓</span>&nbsp;&nbsp;${data.addonQty} x R${data.addonUnitPrice} = R${data.addonTotalPrice}
+              </td></tr>` : ''}
+              ${data.tvAddonActive ? `<tr><td style="padding:4px 0; font-size:13px; color:#2B3648;">
+                <span style="color:${tpl.accent}; font-weight:700;">✓</span>&nbsp;&nbsp;TeamViewer Addon Channels: Unit Price - R${data.tvAddonUnitPrice}
+              </td></tr>
+              <tr><td style="padding:4px 0; font-size:13px; color:#2B3648;">
+                <span style="color:${tpl.accent}; font-weight:700;">✓</span>&nbsp;&nbsp;${data.tvAddonQty} x R${data.tvAddonUnitPrice} = R${data.tvAddonTotalPrice}
+              </td></tr>` : ''}
+              <tr><td style="padding:4px 0 10px 0; font-size:13px; color:#2B3648;">
+                <span style="color:${tpl.accent}; font-weight:700;">✓</span>&nbsp;&nbsp;Year 1 term
+              </td></tr>
+            </table>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:0 22px 16px 22px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:${tpl.panelAlt}; border-radius:10px;">
+              <tr>
+                <td style="padding:10px 14px; font-size:11.5px; line-height:1.5; color:${tpl.panelText}; text-align:left;">
+                  💡 <strong>3-year upfront?</strong> Multiply this total by 3 — same great rate locked in.
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+      <p style="margin:8px 0 0 0; font-size:11.5px; color:#8A93A6; text-align:center;">
+        This quote is valid for 14 days from the date of this email.
+      </p>
+      ${tpl.showPaymentTerm ? `<p style="margin:2px 0 0 0; font-size:11.5px; color:#8A93A6; text-align:center;">
+        Strictly 14 day payment term for all ${tpl.productName} orders.
+      </p>` : ''}
+    </td>
+  </tr>
+
+  <tr>
+    <td style="padding:28px 40px 4px 40px;">
+      <p style="margin:0 0 14px 0; font-size:13px; font-weight:700; color:${tpl.secondary}; text-transform:uppercase; letter-spacing:1px;">
+        Next Steps
+      </p>
+
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td width="32" valign="top" style="padding-bottom:14px;">
+            <table cellpadding="0" cellspacing="0"><tr><td style="width:24px; height:24px; background-color:${tpl.secondary}; border-radius:50%; color:#ffffff; font-size:12px; font-weight:700; text-align:center; line-height:24px;">1</td></tr></table>
+          </td>
+          <td style="padding-bottom:14px; font-size:14px; color:#2B3648; line-height:1.5;">
+            Confirm the order and send through a <strong>PO number</strong> — we'll invoice right after.
+          </td>
+        </tr>
+        <tr>
+          <td width="32" valign="top" style="padding-bottom:14px;">
+            <table cellpadding="0" cellspacing="0"><tr><td style="width:24px; height:24px; background-color:${tpl.secondary}; border-radius:50%; color:#ffffff; font-size:12px; font-weight:700; text-align:center; line-height:24px;">2</td></tr></table>
+          </td>
+          <td style="padding-bottom:14px; font-size:14px; color:#2B3648; line-height:1.5;">
+            Hit reply, click into the end-user details below, and type over the placeholders — then send it back to us.
+          </td>
+        </tr>
+        <tr>
+          <td width="32" valign="top">
+            <table cellpadding="0" cellspacing="0"><tr><td style="width:24px; height:24px; background-color:${tpl.secondary}; border-radius:50%; color:#ffffff; font-size:12px; font-weight:700; text-align:center; line-height:24px;">3</td></tr></table>
+          </td>
+          <td style="font-size:14px; color:#2B3648; line-height:1.5;">
+            Sit back — we'll take it from there.
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <tr>
+    <td style="padding:14px 40px 2px 40px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:${tpl.panel}; border-radius:10px;">
+        <tr>
+          <td style="padding:12px 20px 2px 20px; font-size:12px; font-weight:700; color:${tpl.secondary}; text-transform:uppercase; letter-spacing:1px;">
+            End-User Information
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:6px 20px 0 20px; font-size:12.5px; font-weight:600; color:#3D4658;">Company Name</td>
+        </tr>
+        <tr>
+          <td style="padding:0 20px 6px 20px; font-size:12.5px; font-style:italic; color:#8A93A6; border-bottom:1px solid #E3E8F0;">Click here to type</td>
+        </tr>
+        <tr>
+          <td style="padding:6px 20px 0 20px; font-size:12.5px; font-weight:600; color:#3D4658;">Company Registration Number</td>
+        </tr>
+        <tr>
+          <td style="padding:0 20px 6px 20px; font-size:12.5px; font-style:italic; color:#8A93A6; border-bottom:1px solid #E3E8F0;">Click here to type</td>
+        </tr>
+        <tr>
+          <td style="padding:6px 20px 0 20px; font-size:12.5px; font-weight:600; color:#3D4658;">Company VAT Number</td>
+        </tr>
+        <tr>
+          <td style="padding:0 20px 6px 20px; font-size:12.5px; font-style:italic; color:#8A93A6; border-bottom:1px solid #E3E8F0;">Click here to type</td>
+        </tr>
+        <tr>
+          <td style="padding:6px 20px 0 20px; font-size:12.5px; font-weight:600; color:#3D4658;">Company Address</td>
+        </tr>
+        <tr>
+          <td style="padding:0 20px 6px 20px; font-size:12.5px; font-style:italic; color:#8A93A6; border-bottom:1px solid #E3E8F0;">Click here to type</td>
+        </tr>
+        <tr>
+          <td style="padding:6px 20px 0 20px; font-size:12.5px; font-weight:600; color:#3D4658;">Contact Number</td>
+        </tr>
+        <tr>
+          <td style="padding:0 20px 6px 20px; font-size:12.5px; font-style:italic; color:#8A93A6; border-bottom:1px solid #E3E8F0;">Click here to type</td>
+        </tr>
+        <tr>
+          <td style="padding:6px 20px 0 20px; font-size:12.5px; font-weight:600; color:#3D4658;">Contact Name</td>
+        </tr>
+        <tr>
+          <td style="padding:0 20px 6px 20px; font-size:12.5px; font-style:italic; color:#8A93A6; border-bottom:1px solid #E3E8F0;">Click here to type</td>
+        </tr>
+        <tr>
+          <td style="padding:6px 20px 0 20px; font-size:12.5px; font-weight:600; color:#3D4658;">Email Address</td>
+        </tr>
+        <tr>
+          <td style="padding:0 20px 10px 20px; font-size:12.5px; font-style:italic; color:#8A93A6;">Click here to type</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <tr>
+    <td style="padding:10px 40px 2px 40px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:${tpl.panelAlt}; border-radius:10px;">
+        <tr>
+          <td style="padding:10px 16px; font-size:12.5px; line-height:1.5; color:${tpl.panelText};">
+            Kindly confirm who the license is being assigned to, including the <strong>contact name</strong>, <strong>email address</strong>, and <strong>contact number</strong>.
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <tr>
+    <td style="padding:28px 40px 8px 40px;" align="center">
+      <p style="margin:0; font-size:14.5px; line-height:1.6; color:#2B3648;">
+        We'd also love to explore how we can support you and your customers further —
+        got 15 minutes next week for a quick Teams call?
+      </p>
+    </td>
+  </tr>
+
+  <tr>
+    <td style="padding:30px 40px 10px 40px;">
+      <p style="margin:0; font-size:14px; color:#2B3648;">
+        Thank you kindly,
+      </p>
+    </td>
+  </tr>
+
+  <tr>
+    <td style="padding:0 40px 36px 40px;">
+      <table role="presentation" cellpadding="0" cellspacing="0">
+        <tr>
+          <td style="border-left:3px solid ${tpl.accent}; padding-left:14px;">
+            <p style="margin:0; font-size:15px; font-weight:700; color:${tpl.dark};">Clinton Govender</p>
+            <p style="margin:2px 0 0 0; font-size:12.5px; color:#6B7688;">Group Channel Business Lead</p>
+            <p style="margin:2px 0 0 0; font-size:12.5px; color:#6B7688;">DCG Group · <a href="https://dcggroup.co.za" style="color:#6B7688; text-decoration:none;">dcggroup.co.za</a></p>
+            <p style="margin:8px 0 0 0; font-size:12px; color:${tpl.mutedAccent};">+27744981711 &nbsp;|&nbsp; Clinton.govender@dcggroup.co.za</p>
+            <p style="margin:6px 0 0 0; font-size:12px; color:${tpl.mutedAccent};">
+              <a href="https://www.linkedin.com/company/dcg-group-unlocks-the-value-of-technology/" style="color:${tpl.mutedAccent}; text-decoration:none;">linkedin.com/company/dcg-group</a>
+            </p>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <tr>
+    <td style="background-color:${tpl.panel}; padding:18px 40px; text-align:center;">
+      <p style="margin:0 0 6px 0; font-size:11px; font-weight:700; letter-spacing:0.5px; color:${tpl.accent};">
+        ${tpl.footerTagline}
+      </p>
+      <p style="margin:0; font-size:11px; color:#5C6470;">
+        DCG Group — Africa's Authorised Distributor for Foxit, AnyDesk, TeamViewer, Moziware, Guardz, DCG Asset Tracking and Fleet Management, Udacity, and Dataiku.
+      </p>
+      <p style="margin:6px 0 0 0; font-size:11px; color:#5C6470;">
+        <a href="https://dcggroup.co.za" style="color:#5C6470; text-decoration:none;">dcggroup.co.za</a>
+        &nbsp;|&nbsp;
+        <a href="https://www.linkedin.com/company/dcg-group-unlocks-the-value-of-technology/" style="color:#5C6470; text-decoration:none;">LinkedIn</a>
+      </p>
+    </td>
+  </tr>
+
+</table>
+
+</td>
+</tr>
+</table>
+
+</body>
+</html>`;
+}
+
+function esc(s){
+  return String(s).replace(/[&<>]/g, function(c){
+    return c === '&' ? '&amp;' : c === '<' ? '&lt;' : '&gt;';
+  });
+}
+
+function parseNumber(str){
+  const n = parseFloat(String(str).replace(/,/g, '').trim());
+  return isNaN(n) ? 0 : n;
+}
+
+function formatMoney(n){
+  return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function onPricingChange(){
+  const unitPrice = parseNumber(document.getElementById('unitPrice').value);
+  const qty = parseNumber(document.getElementById('qty').value);
+  const totalField = document.getElementById('totalPrice');
+  totalField.value = formatMoney(unitPrice * qty);
+  render();
+}
+
+function onAddonToggle(){
+  const enabled = document.getElementById('addonEnabled').checked;
+  document.getElementById('addonFields').style.display = enabled ? 'block' : 'none';
+  render();
+}
+
+function onAddonPricingChange(){
+  const unitPrice = parseNumber(document.getElementById('addonUnitPrice').value);
+  const qty = parseNumber(document.getElementById('addonQty').value);
+  document.getElementById('addonTotalPrice').value = formatMoney(unitPrice * qty);
+  render();
+}
+
+function onTvAddonToggle(){
+  const enabled = document.getElementById('tvAddonEnabled').checked;
+  document.getElementById('tvAddonFields').style.display = enabled ? 'block' : 'none';
+  render();
+}
+
+function onTvAddonPricingChange(){
+  const unitPrice = parseNumber(document.getElementById('tvAddonUnitPrice').value);
+  const qty = parseNumber(document.getElementById('tvAddonQty').value);
+  document.getElementById('tvAddonTotalPrice').value = formatMoney(unitPrice * qty);
+  render();
+}
+
+let lastHtml = '';
+
+function getSelectedTemplateKey(){
+  const checked = document.querySelector('input[name="tpl"]:checked');
+  return checked ? checked.value : 'foxit';
+}
+
+const LICENSE_TIERS = {
+  foxit: ['Foxit PDF Editor', 'Foxit PDF Editor+'],
+  anydesk: ['Solo', 'Standard', 'Advanced', 'Ultimate'],
+  teamviewer: ['Premium', 'Business', 'Corporate', 'Tensor']
+};
+
+function getLicenseName(tplKey){
+  if(LICENSE_TIERS[tplKey]){
+    const tier = document.getElementById('licenseNameSelect').value;
+    if(tplKey === 'foxit') return tier;
+    const vendorLabel = tplKey === 'anydesk' ? 'AnyDesk' : 'TeamViewer';
+    return `${vendorLabel} — ${tier}`;
+  }
+  return document.getElementById('licenseNameText').value || '[License Name]';
+}
+
+function render(){
+  const tplKey = getSelectedTemplateKey();
+  const tpl = TEMPLATES[tplKey];
+  document.documentElement.style.setProperty('--tpl-accent', tpl.accent);
+
+  document.getElementById('addonToggleField').style.display = (tplKey === 'anydesk') ? 'block' : 'none';
+  document.getElementById('tvAddonToggleField').style.display = (tplKey === 'teamviewer') ? 'block' : 'none';
+
+  const addonActive = document.getElementById('addonEnabled').checked && tplKey === 'anydesk';
+  const tvAddonActive = document.getElementById('tvAddonEnabled').checked && tplKey === 'teamviewer';
+
+  document.getElementById('addonFields').style.display = addonActive ? 'block' : 'none';
+  document.getElementById('tvAddonFields').style.display = tvAddonActive ? 'block' : 'none';
+
+  const licenseTotal = parseNumber(document.getElementById('totalPrice').value);
+  const addonTotal = parseNumber(document.getElementById('addonTotalPrice').value);
+  const tvAddonTotal = parseNumber(document.getElementById('tvAddonTotalPrice').value);
+  const grandTotal = licenseTotal + (addonActive ? addonTotal : 0) + (tvAddonActive ? tvAddonTotal : 0);
+
+  const data = {
+    contactName: esc(document.getElementById('contactName').value || '[Contact Name]'),
+    licenseName: esc(getLicenseName(tplKey)),
+    totalPrice: esc(formatMoney(grandTotal)),
+    qty: esc(document.getElementById('qty').value || '[Qty]'),
+    unitPrice: esc(document.getElementById('unitPrice').value || '[Unit Price]'),
+    addonActive: addonActive,
+    addonQty: esc(document.getElementById('addonQty').value || '0'),
+    addonUnitPrice: esc(document.getElementById('addonUnitPrice').value || '0.00'),
+    addonTotalPrice: esc(document.getElementById('addonTotalPrice').value || '0.00'),
+    tvAddonActive: tvAddonActive,
+    tvAddonQty: esc(document.getElementById('tvAddonQty').value || '0'),
+    tvAddonUnitPrice: esc(document.getElementById('tvAddonUnitPrice').value || '0.00'),
+    tvAddonTotalPrice: esc(document.getElementById('tvAddonTotalPrice').value || '0.00')
+  };
+  const pers = getPersonalization(tpl);
+  lastHtml = buildTemplate(tpl, data, pers);
+  document.getElementById('previewFrame').srcdoc = lastHtml;
+}
+
+function onTemplateChange(){
+  const tplKey = getSelectedTemplateKey();
+  const tiers = LICENSE_TIERS[tplKey];
+  const textField = document.getElementById('licenseNameTextField');
+  const selectField = document.getElementById('licenseNameSelectField');
+
+  if(tiers){
+    const select = document.getElementById('licenseNameSelect');
+    select.innerHTML = tiers.map(t => `<option value="${t}">${t}</option>`).join('');
+    textField.style.display = 'none';
+    selectField.style.display = 'block';
+  } else {
+    document.getElementById('licenseNameText').value = TEMPLATES[tplKey].licenseNameDefault;
+    textField.style.display = 'block';
+    selectField.style.display = 'none';
+  }
+
+  render();
+}
+
+async function copyHtml(){
+  const status = document.getElementById('status');
+  try{
+    await navigator.clipboard.writeText(lastHtml);
+    status.textContent = "HTML copied — paste into your email client's HTML source view.";
+  }catch(err){
+    status.textContent = 'Could not copy automatically — select and copy from the preview instead.';
+  }
+}
+
+function downloadHtml(){
+  const blob = new Blob([lastHtml], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const tplKey = getSelectedTemplateKey();
+  const contactSlug = (document.getElementById('contactName').value || 'quote').trim().replace(/\s+/g, '_');
+  a.href = url;
+  a.download = 'DCG_' + TEMPLATES[tplKey].productName + '_Quote_' + contactSlug + '.html';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  document.getElementById('status').textContent = 'Downloaded — attach this file or open it and copy the content into your email.';
+}
+
+// IT/dev: replace this with the real Power Automate "When an HTTP request is
+// received" trigger URL once the HubSpot flow is built. Leave blank to disable.
+const HUBSPOT_FLOW_URL = 'https://defaultda3caad5ceb349cfa2ff35d912c28b.9e.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/29/workflows/8d815e65a33442839ca17b7ba773911a/triggers/manual/paths/invoke?api-version=1';
+
+function logToHubSpot(){
+  const status = document.getElementById('status');
+
+  if(!HUBSPOT_FLOW_URL){
+    status.textContent = 'HubSpot logging is not configured yet — ask IT for the flow URL.';
+    return;
+  }
+
+  const tplKey = getSelectedTemplateKey();
+  const payload = {
+    company: document.getElementById('customerCompany').value.trim(),
+    contactName: document.getElementById('contactName').value.trim(),
+    product: TEMPLATES[tplKey].productName,
+    licenseName: getLicenseName(tplKey),
+    quantity: document.getElementById('qty').value,
+    unitPrice: document.getElementById('unitPrice').value,
+    totalPrice: document.getElementById('totalPrice').value,
+    industry: document.getElementById('industrySelect').value,
+    quoteHtml: lastHtml
+  };
+
+  status.textContent = 'Sending to HubSpot…';
+
+  fetch(HUBSPOT_FLOW_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify(payload)
+  })
+  .then(function(res){
+    if(res.ok){
+      status.textContent = 'Logged to HubSpot.';
+    } else {
+      status.textContent = 'HubSpot logging failed — check the flow.';
+    }
+  })
+  .catch(function(){
+    status.textContent = 'Could not reach the HubSpot flow — check your connection.';
+  });
+}
+
+onTemplateChange();
+onPricingChange();
+
+if(typeof Office !== 'undefined'){
+  Office.onReady(function(info){
+    if(info.host === Office.HostType.Outlook){
+      document.getElementById('insertBtn').style.display = 'block';
+    }
+  });
+}
+
+function insertIntoReply(){
+  const status = document.getElementById('status');
+  if(typeof Office === 'undefined' || !Office.context || !Office.context.mailbox){
+    status.textContent = 'This only works when the tool is open inside Outlook.';
+    return;
+  }
+  Office.context.mailbox.item.body.setSelectedDataAsync(
+    lastHtml,
+    { coercionType: Office.CoercionType.Html },
+    function(result){
+      status.textContent = (result.status === Office.AsyncResultStatus.Succeeded)
+        ? 'Quote inserted into your reply.'
+        : 'Could not insert automatically — use Copy email HTML instead.';
+    }
+  );
+}
+</script>
+
+</body>
+</html>

@@ -75,6 +75,25 @@
               </Group>
             </OfficeTab>
           </ExtensionPoint>
+          <ExtensionPoint xsi:type="MessageComposeCommandSurface">
+            <OfficeTab id="TabDefault">
+              <Group id="DCGQuoteGroupCompose">
+                <Label resid="GroupLabel"/>
+                <Control xsi:type="Button" id="DCGQuoteButtonCompose">
+                  <Label resid="ButtonLabel"/>
+                  <Supertip><Title resid="ButtonLabel"/><Description resid="ButtonTooltip"/></Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="Icon.16x16"/>
+                    <bt:Image size="32" resid="Icon.32x32"/>
+                    <bt:Image size="80" resid="Icon.80x80"/>
+                  </Icon>
+                  <Action xsi:type="ShowTaskpane">
+                    <SourceLocation resid="Taskpane.Url"/>
+                  </Action>
+                </Control>
+              </Group>
+            </OfficeTab>
+          </ExtensionPoint>
         </DesktopFormFactor>
       </Host>
     </Hosts>

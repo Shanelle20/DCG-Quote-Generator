@@ -152,40 +152,25 @@
     </div>
 
     <div class="field">
-      <label for="industrySelect">Customer industry (optional)</label>
-      <select id="industrySelect" onchange="onIndustryChange()">
-        <option value="">— None —</option>
-        <option value="construction">Construction</option>
-        <option value="legal">Legal</option>
-        <option value="healthcare">Healthcare</option>
-        <option value="finance">Finance</option>
-        <option value="manufacturing">Manufacturing</option>
-        <option value="retail">Retail</option>
-        <option value="education">Education</option>
-        <option value="government">Government</option>
-        <option value="it">IT / Technology</option>
-        <option value="custom">Other (type your own)</option>
-      </select>
-    </div>
-
-    <div class="field" id="customIndustryField" style="display:none;">
-      <label for="customIndustryName">Type the industry name</label>
-      <input type="text" id="customIndustryName" placeholder="e.g. Hospitality" oninput="render()">
-    </div>
-
-    <div class="field">
       <label for="customerCompany">Customer / company name (optional)</label>
       <input type="text" id="customerCompany" placeholder="e.g. Acme Construction" oninput="render()">
     </div>
 
     <div class="field">
-      <label for="customIndustryNote">Custom personalization note (optional — overrides the industry preset above)</label>
-      <textarea id="customIndustryNote" rows="3" placeholder="Type a specific line about this customer's situation and it'll be used instead of the preset" oninput="render()"></textarea>
-    </div>
-
+<label for="sender">From</label>
+<select id="sender" onchange="render()">
+<option value="clinton">Clinton Govender</option>
+<option value="shanelle">Shanelle Sultan</option>
+</select>
+</div>
     <div class="field">
       <label for="contactName">Contact name</label>
       <input type="text" id="contactName" value="John" oninput="render()">
+    </div>
+
+    <div class="field">
+      <label for="customIndustryNote">Custom personalization note (optional)</label>
+      <textarea id="customIndustryNote" rows="3" placeholder="Type a specific line about this customer's situation" oninput="render()"></textarea>
     </div>
 
     <div class="field" id="licenseNameTextField">
@@ -291,7 +276,22 @@
 </div>
 
 <script>
-const TEMPLATES = {
+const SENDERS = {
+clinton: {
+name: 'Clinton Govender',
+title: 'Group Channel Business Lead',
+phone: '+27744981711',
+email: 'Clinton.govender@dcggroup.co.za'
+},
+shanelle: {
+name: 'Shanelle Sultan',
+title: 'Business Development Manager',
+phone: '+27 64 925 2296 &nbsp;|&nbsp; +27 79 985 0981',
+email: 'Shanelle@dcggroup.co.za'
+}
+};
+
+  const TEMPLATES = {
   foxit: {
     productName: 'Foxit',
     badgeName: 'Foxit',
@@ -351,96 +351,16 @@ const TEMPLATES = {
   }
 };
 
-const INDUSTRIES = {
-  construction: {
-    label: 'Construction',
-    intro: (company) => `I know teams${company ? ` at ${company}` : ''} managing multiple sites, subcontractors and crews need tools that are simple to roll out and stay reliable even with patchy on-site connectivity — that's exactly where this fits in.`,
-    callout: (product, company) => `With crews spread across sites and subcontractors coming and going, ${product} keeps approvals, remote support and reporting simple for ${company || 'construction teams'} — no matter where the job is.`
-  },
-  legal: {
-    label: 'Legal',
-    intro: (company) => `I know firms${company ? ` like ${company}` : ''} handle sensitive client documents daily, so security, audit trails and ease of use matter just as much as price.`,
-    callout: (product, company) => `${product} is built to keep document handling secure and simple for ${company || 'legal teams'} — without slowing down billable work.`
-  },
-  healthcare: {
-    label: 'Healthcare',
-    intro: (company) => `I know teams${company ? ` at ${company}` : ''} are balancing patient care with strict compliance requirements, so anything that adds friction is a non-starter.`,
-    callout: (product, company) => `${product} is built to stay reliable and compliance-friendly for ${company || 'healthcare teams'}, without adding extra admin burden.`
-  },
-  finance: {
-    label: 'Finance',
-    intro: (company) => `I know teams${company ? ` at ${company}` : ''} deal with sensitive financial data daily, so security and reliability matter as much as cost.`,
-    callout: (product, company) => `${product} gives ${company || 'finance teams'} the security and consistency needed for day-to-day financial operations, at a predictable cost.`
-  },
-  manufacturing: {
-    label: 'Manufacturing',
-    intro: (company) => `I know teams${company ? ` at ${company}` : ''} run across plant floors and back-office systems, so tools need to be dependable across very different environments.`,
-    callout: (product, company) => `${product} keeps support and connectivity consistent for ${company || 'manufacturing teams'}, from the plant floor to the back office.`
-  },
-  retail: {
-    label: 'Retail',
-    intro: (company) => `I know teams${company ? ` at ${company}` : ''} are managing multiple stores or locations, so ease of rollout and support across sites matters a lot.`,
-    callout: (product, company) => `${product} makes it easy for ${company || 'retail teams'} to support and manage systems across multiple locations from one place.`
-  },
-  education: {
-    label: 'Education',
-    intro: (company) => `I know teams${company ? ` at ${company}` : ''} are working with tight budgets and a wide mix of devices and users, so simplicity and value both matter.`,
-    callout: (product, company) => `${product} gives ${company || 'education teams'} an easy, budget-friendly way to support a wide range of devices and users.`
-  },
-  government: {
-    label: 'Government',
-    intro: (company) => `I know teams${company ? ` at ${company}` : ''} operate under strict procurement and compliance requirements, so a clear, reliable process matters.`,
-    callout: (product, company) => `${product} is a straightforward fit for ${company || 'government teams'} looking for a reliable, well-supported solution.`
-  },
-  it: {
-    label: 'IT / Technology',
-    intro: (company) => `I know teams${company ? ` at ${company}` : ''} are supporting a wide range of systems and users, so reliability and ease of management are key.`,
-    callout: (product, company) => `${product} slots straight into ${company || 'IT teams'}' existing workflows, without adding extra overhead to manage.`
-  }
-};
-
-function onIndustryChange(){
-  const key = document.getElementById('industrySelect').value;
-  document.getElementById('customIndustryField').style.display = (key === 'custom') ? 'block' : 'none';
-  render();
-}
-
 function getPersonalization(tpl){
-  const industryKey = document.getElementById('industrySelect').value;
-  const company = esc(document.getElementById('customerCompany').value.trim());
   const customNote = document.getElementById('customIndustryNote').value.trim();
-
   if(customNote){
     return {
       enabled: true,
-      heading: 'Why this matters for ' + (company || 'you'),
+      heading: 'Why this matters for you',
       intro: esc(customNote),
       callout: esc(customNote)
     };
   }
-
-  if(industryKey === 'custom'){
-    const industryName = document.getElementById('customIndustryName').value.trim();
-    if(!industryName) return { enabled: false };
-    const industryEsc = esc(industryName);
-    return {
-      enabled: true,
-      heading: 'Why this matters for ' + (company || industryEsc + ' teams'),
-      intro: `I know teams in ${industryEsc}${company ? ` like ${company}` : ''} have their own priorities, so I've kept this quote focused on what's actually useful for you.`,
-      callout: `${tpl.productName} is a flexible fit for ${company || industryEsc + ' teams'}, whatever your priorities look like day to day.`
-    };
-  }
-
-  if(industryKey && INDUSTRIES[industryKey]){
-    const ind = INDUSTRIES[industryKey];
-    return {
-      enabled: true,
-      heading: 'Why this matters for ' + (company || ind.label + ' teams'),
-      intro: ind.intro(company),
-      callout: ind.callout(tpl.productName, company)
-    };
-  }
-
   return { enabled: false };
 }
 
@@ -762,10 +682,10 @@ Assignee Details
       <table role="presentation" cellpadding="0" cellspacing="0">
         <tr>
           <td style="border-left:3px solid ${tpl.accent}; padding-left:14px;">
-            <p style="margin:0; font-size:15px; font-weight:700; color:${tpl.dark};">Clinton Govender</p>
-            <p style="margin:2px 0 0 0; font-size:12.5px; color:#6B7688;">Group Channel Business Lead</p>
-            <p style="margin:2px 0 0 0; font-size:12.5px; color:#6B7688;">DCG Group · <a href="https://dcggroup.co.za" style="color:#6B7688; text-decoration:none;">dcggroup.co.za</a></p>
-            <p style="margin:8px 0 0 0; font-size:12px; color:${tpl.mutedAccent};">+27744981711 &nbsp;|&nbsp; Clinton.govender@dcggroup.co.za</p>
+            <p style="margin:0; font-size:15px; font-weight:700; color:${tpl.dark};">${data.senderName}</p>
+<p style="margin:2px 0 0 0; font-size:12.5px; color:#6B7688;">${data.senderTitle}</p>
+<p style="margin:2px 0 0 0; font-size:12.5px; color:#6B7688;">DCG Group · <a href="https://dcggroup.co.za" style="color:#6B7688; text-decoration:none;">dcggroup.co.za</a></p>
+<p style="margin:8px 0 0 0; font-size:12px; color:${tpl.mutedAccent};">${data.senderPhone} &nbsp;|&nbsp; ${data.senderEmail}</p>
             <p style="margin:6px 0 0 0; font-size:12px; color:${tpl.mutedAccent};">
               <a href="https://www.linkedin.com/company/dcg-group-unlocks-the-value-of-technology/" style="color:${tpl.mutedAccent}; text-decoration:none;">linkedin.com/company/dcg-group</a>
             </p>
@@ -919,7 +839,11 @@ function render(){
     tvAddonUnitPrice: esc(document.getElementById('tvAddonUnitPrice').value || '0.00'),
     tvAddonTotalPrice: esc(document.getElementById('tvAddonTotalPrice').value || '0.00'),
 currencySymbol: (document.getElementById('currency').value === 'USD') ? '$' : 'R',
-termLabel: (function(){ const t = document.getElementById('term').value; return t + ' Year'; })()
+termLabel: (function(){ const t = document.getElementById('term').value; return t + ' Year'; })(),
+senderName: SENDERS[document.getElementById('sender').value].name,
+senderTitle: SENDERS[document.getElementById('sender').value].title,
+senderPhone: SENDERS[document.getElementById('sender').value].phone,
+senderEmail: SENDERS[document.getElementById('sender').value].email
 };
   const pers = getPersonalization(tpl);
   lastHtml = buildTemplate(tpl, data, pers);
@@ -985,14 +909,12 @@ function logToHubSpot(){
 
   const tplKey = getSelectedTemplateKey();
   const payload = {
-    company: document.getElementById('customerCompany').value.trim(),
     contactName: document.getElementById('contactName').value.trim(),
     product: TEMPLATES[tplKey].productName,
     licenseName: getLicenseName(tplKey),
     quantity: document.getElementById('qty').value,
     unitPrice: document.getElementById('unitPrice').value,
     totalPrice: document.getElementById('totalPrice').value,
-    industry: document.getElementById('industrySelect').value,
     currency: document.getElementById('currency').value,
     quoteHtml: lastHtml
   };

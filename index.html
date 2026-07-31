@@ -585,7 +585,7 @@ Your pricing is ready — plus a few quick next steps to get your order moving.
                 <span style="color:${tpl.accent}; font-weight:700;">✓</span>&nbsp;&nbsp;${data.tvAddonQty} x ${data.currencySymbol}${data.tvAddonUnitPrice} = ${data.currencySymbol}${data.tvAddonTotalPrice}
               </td></tr>` : ''}
               <tr><td style="padding:4px 0 10px 0; font-size:13px; color:#2B3648;">
-                <span style="color:${tpl.accent}; font-weight:700;">✓</span>&nbsp;&nbsp;${data.termLabel} term
+                <span style="color:${tpl.accent}; font-weight:700;">✓</span>&nbsp;&nbsp;${data.termLabel} Term
               </td></tr>
             </table>
           </td>
@@ -892,7 +892,7 @@ function render(){
     tvAddonUnitPrice: esc(document.getElementById('tvAddonUnitPrice').value || '0.00'),
     tvAddonTotalPrice: esc(document.getElementById('tvAddonTotalPrice').value || '0.00'),
 currencySymbol: (document.getElementById('currency').value === 'USD') ? '$' : 'R',
-termLabel: (function(){ const t = document.getElementById('term').value; return (t === '1') ? '1 Year' : (t === '3') ? '3 year' : t + ' Years'; })()
+termLabel: (function(){ const t = document.getElementById('term').value; return t + ' Year'; })()
 };
   const pers = getPersonalization(tpl);
   lastHtml = buildTemplate(tpl, data, pers);

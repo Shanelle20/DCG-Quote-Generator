@@ -210,7 +210,7 @@
 <select id="term" onchange="onPricingChange()">
 <option value="1">1 Year</option>
 <option value="2">2 Years</option>
-<option value="3">3 Years</option>
+<option value="3">3 year</option>
 </select>
 </div>
     <div class="field">
@@ -892,7 +892,7 @@ function render(){
     tvAddonUnitPrice: esc(document.getElementById('tvAddonUnitPrice').value || '0.00'),
     tvAddonTotalPrice: esc(document.getElementById('tvAddonTotalPrice').value || '0.00'),
 currencySymbol: (document.getElementById('currency').value === 'USD') ? '$' : 'R',
-termLabel: (function(){ const t = document.getElementById('term').value; return (t === '1') ? 'Year 1' : t + ' Years'; })()
+termLabel: (function(){ const t = document.getElementById('term').value; return (t === '1') ? 'Year 1' : (t === '3') ? '3 year' : t + ' Years'; })()
 };
   const pers = getPersonalization(tpl);
   lastHtml = buildTemplate(tpl, data, pers);

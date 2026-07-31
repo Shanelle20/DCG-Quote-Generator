@@ -199,6 +199,13 @@
     </div>
 
     <div class="field">
+<label for="currency">Currency</label>
+<select id="currency" onchange="render()">
+<option value="ZAR">ZAR (R)</option>
+<option value="USD">USD ($)</option>
+</select>
+</div>
+    <div class="field">
       <label for="unitPrice">Unit price (ex VAT)</label>
       <input type="text" id="unitPrice" value="124.00" oninput="onPricingChange()">
     </div>
@@ -543,7 +550,7 @@ Your pricing is ready — plus a few quick next steps to get your order moving.
 
         <tr>
           <td style="padding:16px 28px 2px 28px; text-align:center;">
-            <p style="margin:0; font-size:32px; font-weight:800; color:${tpl.dark}; line-height:1;">R${data.totalPrice}</p>
+            <p style="margin:0; font-size:32px; font-weight:800; color:${tpl.dark}; line-height:1;">${data.currencySymbol}${data.totalPrice}</p>
             <p style="margin:5px 0 0 0; font-size:11px; font-weight:700; color:#8A93A6; text-transform:uppercase; letter-spacing:1px;">Year 1 &nbsp;·&nbsp; ex VAT</p>
           </td>
         </tr>
@@ -555,19 +562,19 @@ Your pricing is ready — plus a few quick next steps to get your order moving.
                 <span style="color:${tpl.accent}; font-weight:700;">✓</span>&nbsp;&nbsp;${data.qty} Per User Per License
               </td></tr>
               <tr><td style="padding:4px 0; font-size:13px; color:#2B3648;">
-                <span style="color:${tpl.accent}; font-weight:700;">✓</span>&nbsp;&nbsp;R${data.unitPrice} Per User (Unit Price)
+                <span style="color:${tpl.accent}; font-weight:700;">✓</span>&nbsp;&nbsp;${data.currencySymbol}${data.unitPrice} Per User (Unit Price)
               </td></tr>
               ${data.addonActive ? `<tr><td style="padding:4px 0; font-size:13px; color:#2B3648;">
-                <span style="color:${tpl.accent}; font-weight:700;">✓</span>&nbsp;&nbsp;AnyDesk Addon Channels: Unit Price - R${data.addonUnitPrice}
+                <span style="color:${tpl.accent}; font-weight:700;">✓</span>&nbsp;&nbsp;AnyDesk Addon Channels: Unit Price - ${data.currencySymbol}${data.addonUnitPrice}
               </td></tr>
               <tr><td style="padding:4px 0; font-size:13px; color:#2B3648;">
-                <span style="color:${tpl.accent}; font-weight:700;">✓</span>&nbsp;&nbsp;${data.addonQty} x R${data.addonUnitPrice} = R${data.addonTotalPrice}
+                <span style="color:${tpl.accent}; font-weight:700;">✓</span>&nbsp;&nbsp;${data.addonQty} x ${data.currencySymbol}${data.addonUnitPrice} = ${data.currencySymbol}${data.addonTotalPrice}
               </td></tr>` : ''}
               ${data.tvAddonActive ? `<tr><td style="padding:4px 0; font-size:13px; color:#2B3648;">
-                <span style="color:${tpl.accent}; font-weight:700;">✓</span>&nbsp;&nbsp;TeamViewer Addon Channels: Unit Price - R${data.tvAddonUnitPrice}
+                <span style="color:${tpl.accent}; font-weight:700;">✓</span>&nbsp;&nbsp;TeamViewer Addon Channels: Unit Price - ${data.currencySymbol}${data.tvAddonUnitPrice}
               </td></tr>
               <tr><td style="padding:4px 0; font-size:13px; color:#2B3648;">
-                <span style="color:${tpl.accent}; font-weight:700;">✓</span>&nbsp;&nbsp;${data.tvAddonQty} x R${data.tvAddonUnitPrice} = R${data.tvAddonTotalPrice}
+                <span style="color:${tpl.accent}; font-weight:700;">✓</span>&nbsp;&nbsp;${data.tvAddonQty} x ${data.currencySymbol}${data.tvAddonUnitPrice} = ${data.currencySymbol}${data.tvAddonTotalPrice}
               </td></tr>` : ''}
               <tr><td style="padding:4px 0 10px 0; font-size:13px; color:#2B3648;">
                 <span style="color:${tpl.accent}; font-weight:700;">✓</span>&nbsp;&nbsp;Year 1 term
@@ -863,7 +870,8 @@ function render(){
     tvAddonActive: tvAddonActive,
     tvAddonQty: esc(document.getElementById('tvAddonQty').value || '0'),
     tvAddonUnitPrice: esc(document.getElementById('tvAddonUnitPrice').value || '0.00'),
-    tvAddonTotalPrice: esc(document.getElementById('tvAddonTotalPrice').value || '0.00')
+    tvAddonTotalPrice: esc(document.getElementById('tvAddonTotalPrice').value || '0.00'),
+currencySymbol: (document.getElementById('currency').value === 'USD') ? '$' : 'R'
   };
   const pers = getPersonalization(tpl);
   lastHtml = buildTemplate(tpl, data, pers);
@@ -937,6 +945,7 @@ function logToHubSpot(){
     unitPrice: document.getElementById('unitPrice').value,
     totalPrice: document.getElementById('totalPrice').value,
     industry: document.getElementById('industrySelect').value,
+    currency: document.getElementById('currency').value,
     quoteHtml: lastHtml
   };
 

@@ -206,6 +206,14 @@
 </select>
 </div>
     <div class="field">
+<label for="term">Term (years)</label>
+<select id="term" onchange="onPricingChange()">
+<option value="1">1 Year</option>
+<option value="2">2 Years</option>
+<option value="3">3 Years</option>
+</select>
+</div>
+    <div class="field">
       <label for="unitPrice">Unit price (ex VAT)</label>
       <input type="text" id="unitPrice" value="124.00" oninput="onPricingChange()">
     </div>
@@ -551,7 +559,7 @@ Your pricing is ready — plus a few quick next steps to get your order moving.
         <tr>
           <td style="padding:16px 28px 2px 28px; text-align:center;">
             <p style="margin:0; font-size:32px; font-weight:800; color:${tpl.dark}; line-height:1;">${data.currencySymbol}${data.totalPrice}</p>
-            <p style="margin:5px 0 0 0; font-size:11px; font-weight:700; color:#8A93A6; text-transform:uppercase; letter-spacing:1px;">Year 1 &nbsp;·&nbsp; ex VAT</p>
+            <p style="margin:5px 0 0 0; font-size:11px; font-weight:700; color:#8A93A6; text-transform:uppercase; letter-spacing:1px;">${data.termLabel} &nbsp;·&nbsp; ex VAT</p>
           </td>
         </tr>
 
@@ -577,7 +585,7 @@ Your pricing is ready — plus a few quick next steps to get your order moving.
                 <span style="color:${tpl.accent}; font-weight:700;">✓</span>&nbsp;&nbsp;${data.tvAddonQty} x ${data.currencySymbol}${data.tvAddonUnitPrice} = ${data.currencySymbol}${data.tvAddonTotalPrice}
               </td></tr>` : ''}
               <tr><td style="padding:4px 0 10px 0; font-size:13px; color:#2B3648;">
-                <span style="color:${tpl.accent}; font-weight:700;">✓</span>&nbsp;&nbsp;Year 1 term
+                <span style="color:${tpl.accent}; font-weight:700;">✓</span>&nbsp;&nbsp;${data.termLabel} term
               </td></tr>
             </table>
           </td>
@@ -782,11 +790,21 @@ function formatMoney(n){
 }
 
 function onPricingChange(){
-  const unitPrice = parseNumber(document.getElementById('unitPrice').value);
-  const qty = parseNumber(document.getElementById('qty').value);
-  const totalField = document.getElementById('totalPrice');
-  totalField.value = formatMoney(unitPrice * qty);
-  render();
+const unitPrice = parseNumber(document.getElementById('unitPrice').value);
+const qty = parseNumber(document.getElementById('qty').value);
+const term = parseNumber(document.getElementById('term').value) || 1;
+const totalField = document.getElementById('totalPrice');
+totalField.value = formatMoney(unitPrice * qty * term);
+
+const addonUnitPrice = parseNumber(document.getElementById('addonUnitPrice').value);
+const addonQty = parseNumber(document.getElementById('addonQty').value);
+document.getElementById('addonTotalPrice').value = formatMoney(addonUnitPrice * addonQty * term);
+
+const tvAddonUnitPrice = parseNumber(document.getElementById('tvAddonUnitPrice').value);
+const tvAddonQty = parseNumber(document.getElementById('tvAddonQty').value);
+document.getElementById('tvAddonTotalPrice').value = formatMoney(tvAddonUnitPrice * tvAddonQty * term);
+
+render();
 }
 
 function onAddonToggle(){
@@ -796,10 +814,11 @@ function onAddonToggle(){
 }
 
 function onAddonPricingChange(){
-  const unitPrice = parseNumber(document.getElementById('addonUnitPrice').value);
-  const qty = parseNumber(document.getElementById('addonQty').value);
-  document.getElementById('addonTotalPrice').value = formatMoney(unitPrice * qty);
-  render();
+const unitPrice = parseNumber(document.getElementById('addonUnitPrice').value);
+const qty = parseNumber(document.getElementById('addonQty').value);
+const term = parseNumber(document.getElementById('term').value) || 1;
+document.getElementById('addonTotalPrice').value = formatMoney(unitPrice * qty * term);
+render();
 }
 
 function onTvAddonToggle(){
@@ -809,10 +828,11 @@ function onTvAddonToggle(){
 }
 
 function onTvAddonPricingChange(){
-  const unitPrice = parseNumber(document.getElementById('tvAddonUnitPrice').value);
-  const qty = parseNumber(document.getElementById('tvAddonQty').value);
-  document.getElementById('tvAddonTotalPrice').value = formatMoney(unitPrice * qty);
-  render();
+const unitPrice = parseNumber(document.getElementById('tvAddonUnitPrice').value);
+const qty = parseNumber(document.getElementById('tvAddonQty').value);
+const term = parseNumber(document.getElementById('term').value) || 1;
+document.getElementById('tvAddonTotalPrice').value = formatMoney(unitPrice * qty * term);
+render();
 }
 
 let lastHtml = '';
@@ -871,8 +891,9 @@ function render(){
     tvAddonQty: esc(document.getElementById('tvAddonQty').value || '0'),
     tvAddonUnitPrice: esc(document.getElementById('tvAddonUnitPrice').value || '0.00'),
     tvAddonTotalPrice: esc(document.getElementById('tvAddonTotalPrice').value || '0.00'),
-currencySymbol: (document.getElementById('currency').value === 'USD') ? '$' : 'R'
-  };
+currencySymbol: (document.getElementById('currency').value === 'USD') ? '$' : 'R',
+termLabel: (function(){ const t = document.getElementById('term').value; return (t === '1') ? 'Year 1' : t + ' Years'; })()
+};
   const pers = getPersonalization(tpl);
   lastHtml = buildTemplate(tpl, data, pers);
   document.getElementById('previewFrame').srcdoc = lastHtml;
